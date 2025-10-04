@@ -1,0 +1,28 @@
+{
+  "manifest_version": 3,
+  "name": "DislinkedIn - LinkedIn Dislike Button",
+  "version": "1.0.0",
+  "description": "Adds a dislike button to LinkedIn posts",
+  "permissions": [
+    "storage",
+    "activeTab"
+  ],
+  "host_permissions": [
+    "https://*.supabase.co/*"
+  ],
+  "content_scripts": [
+    {
+      "matches": ["*://www.linkedin.com/*"],
+      "js": ["content.js"],
+      "css": ["styles.css"],
+      "run_at": "document_end"
+    }
+  ],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "action": {
+    "default_popup": "popup.html",
+    "default_title": "DislinkedIn"
+  }
+}

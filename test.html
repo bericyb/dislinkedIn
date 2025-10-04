@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DislinkedIn Extension Test</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #f3f2ef;
+        }
+        
+        .container {
+            background: white;
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+        
+        .header {
+            color: #0073b1;
+            border-bottom: 2px solid #0073b1;
+            padding-bottom: 10px;
+            margin-bottom: 20px;
+        }
+        
+        .section {
+            margin-bottom: 30px;
+        }
+        
+        .section h3 {
+            color: #333;
+            margin-bottom: 15px;
+        }
+        
+        .step {
+            background: #f8f9fa;
+            border-left: 4px solid #0073b1;
+            padding: 15px;
+            margin-bottom: 10px;
+        }
+        
+        .step-number {
+            background: #0073b1;
+            color: white;
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            margin-right: 10px;
+            font-size: 14px;
+        }
+        
+        .code {
+            background: #f1f1f1;
+            padding: 10px;
+            border-radius: 4px;
+            font-family: monospace;
+            margin: 10px 0;
+        }
+        
+        .feature {
+            background: #e7f3ff;
+            border: 1px solid #b3d7ff;
+            border-radius: 4px;
+            padding: 10px;
+            margin: 10px 0;
+        }
+        
+        .warning {
+            background: #fff3cd;
+            border: 1px solid #ffd700;
+            border-radius: 4px;
+            padding: 10px;
+            margin: 10px 0;
+        }
+        
+        .button-demo {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px;
+            background: white;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            margin: 10px 0;
+        }
+        
+        .mock-button {
+            background: #f3f2ef;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            padding: 8px 12px;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            cursor: pointer;
+            transition: background-color 0.15s;
+        }
+        
+        .mock-button:hover {
+            background: #e8e8e8;
+        }
+        
+        .mock-button.disliked {
+            background: #ffe6e6;
+            border-color: #e06847;
+            color: #e06847;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1 class="header">DislinkedIn Extension - Installation & Testing Guide</h1>
+        
+        <div class="section">
+            <h3>📦 Installation Steps</h3>
+            
+            <div class="step">
+                <span class="step-number">1</span>
+                <strong>Open Chrome/Edge Extensions Page</strong>
+                <div class="code">chrome://extensions/ (or edge://extensions/)</div>
+            </div>
+            
+            <div class="step">
+                <span class="step-number">2</span>
+                <strong>Enable Developer Mode</strong>
+                <p>Toggle the "Developer mode" switch in the top-right corner</p>
+            </div>
+            
+            <div class="step">
+                <span class="step-number">3</span>
+                <strong>Load Extension</strong>
+                <p>Click "Load unpacked" and select the dislinkedIn folder</p>
+            </div>
+            
+            <div class="step">
+                <span class="step-number">4</span>
+                <strong>Test on LinkedIn</strong>
+                <p>Visit <a href="https://linkedin.com" target="_blank">linkedin.com</a> and look for dislike buttons on posts</p>
+            </div>
+        </div>
+        
+        <div class="section">
+            <h3>✨ What You'll See</h3>
+            
+            <div class="feature">
+                <strong>Dislike Button Appearance:</strong>
+                <div class="button-demo">
+                    <div class="mock-button">
+                        👍 Like
+                    </div>
+                    <div class="mock-button">
+                        💬 Comment
+                    </div>
+                    <div class="mock-button" onclick="this.classList.toggle('disliked')">
+                        👎 Dislike
+                    </div>
+                    <div class="mock-button">
+                        🔄 Repost
+                    </div>
+                    <div class="mock-button">
+                        📤 Send
+                    </div>
+                </div>
+                <small>Click the dislike button above to see the visual feedback!</small>
+            </div>
+        </div>
+        
+        <div class="section">
+            <h3>🔧 Technical Details</h3>
+            
+            <div class="feature">
+                <strong>How It Works:</strong>
+                <ul>
+                    <li>Content script injects dislike buttons into LinkedIn's action bars</li>
+                    <li>Uses LinkedIn's post URN (data-urn attribute) for unique identification</li>
+                    <li>Stores dislike data locally using Chrome storage API</li>
+                    <li>Mock backend simulates server-side functionality</li>
+                </ul>
+            </div>
+            
+            <div class="feature">
+                <strong>Post Identification Example:</strong>
+                <div class="code">data-urn="urn:li:activity:7380291595671199744"</div>
+                <p>This unique identifier allows the extension to track dislikes per post</p>
+            </div>
+        </div>
+        
+        <div class="section">
+            <h3>🛠 Troubleshooting</h3>
+            
+            <div class="warning">
+                <strong>If buttons don't appear:</strong>
+                <ul>
+                    <li>Check that the extension is enabled in chrome://extensions/</li>
+                    <li>Refresh the LinkedIn page</li>
+                    <li>Open browser console (F12) and look for DislinkedIn messages</li>
+                    <li>Make sure you're on linkedin.com (not the mobile version)</li>
+                </ul>
+            </div>
+            
+            <div class="warning">
+                <strong>Icon Issues:</strong>
+                <p>If you see icon errors, you can temporarily remove the "icons" section from manifest.json for testing</p>
+            </div>
+        </div>
+        
+        <div class="section">
+            <h3>📊 Extension Popup</h3>
+            
+            <div class="feature">
+                <strong>Click the extension icon to see:</strong>
+                <ul>
+                    <li>Total number of dislikes you've given</li>
+                    <li>Number of posts you've disliked</li>
+                    <li>Extension status</li>
+                    <li>Options to refresh or clear all data</li>
+                </ul>
+            </div>
+        </div>
+        
+        <div class="section">
+            <h3>🔒 Privacy & Data</h3>
+            
+            <div class="feature">
+                <strong>Your data is safe:</strong>
+                <ul>
+                    <li>All dislike data is stored locally in your browser</li>
+                    <li>No data is sent to external servers</li>
+                    <li>Only you can see your dislike actions</li>
+                    <li>Extension only runs on LinkedIn.com</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

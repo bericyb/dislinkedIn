@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Supabase Integration Test</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; }
+        .test-section { margin: 20px 0; padding: 15px; border: 1px solid #ddd; border-radius: 5px; }
+        button { padding: 10px 15px; margin: 5px; cursor: pointer; }
+        .result { margin-top: 10px; padding: 10px; background: #f9f9f9; border-radius: 3px; }
+        .error { background: #ffe6e6; color: #d11515; }
+        .success { background: #e6ffe6; color: #006600; }
+    </style>
+</head>
+<body>
+    <h1>DislinkedIn Supabase Integration Test</h1>
+    
+    <div class="test-section">
+        <h3>Configuration</h3>
+        <input type="url" id="supabaseUrl" placeholder="Supabase URL" style="width: 300px; margin-right: 10px;">
+        <input type="password" id="supabaseKey" placeholder="Supabase Key" style="width: 300px; margin-right: 10px;">
+        <button onclick="setConfig()">Set Config</button>
+    </div>
+
+    <div class="test-section">
+        <h3>Test Operations</h3>
+        <input type="text" id="testPostUrn" placeholder="Test Post URN" value="urn:li:activity:test123" style="width: 300px; margin-right: 10px;">
+        <br><br>
+        <button onclick="testInsertDislike()">Insert Dislike</button>
+        <button onclick="testGetDislike()">Get Dislike</button>
+        <button onclick="testIncrementDislike()">Increment Dislike</button>
+        <button onclick="testDecrementDislike()">Decrement Dislike</button>
+        <button onclick="testRemoveDislike()">Remove Dislike</button>
+        <button onclick="testGetAllDislikes()">Get All Dislikes</button>
+    </div>
+
+    <div class="test-section">
+        <h3>Results</h3>
+        <div id="results"></div>
+    </div>
+
+    <script>
+        class SupabaseClient {
+            constructor(supabaseUrl, supabaseKey) {
+                this.supabaseUrl = supabaseUrl;
+                this.supabaseKey = supabaseKey;
+                this.headers = {
+                    'Content-Type': 'application/json',
+                    'apikey': supabaseKey,
+                    'Authorization': `Bearer ${supabaseKey}`
+                };
+            }
+
+            async insertDislike(postUrn) {
+                try {
+                    const response = await fetch(`${this.supabaseUrl}/rest/v1/post_dislikes`, {
+                        method: 'POST',
+                        headers: this.headers,
+                        body: JSON.stringify({
+                            post_urn: postUrn,
+                            dislike_count: 1
+                        })
+                    });
+
+                    if (!response.ok) {
+                        if (response.status === 409) {
+                            return await this.incrementDislike(postUrn);
+                        }
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    }
+
+                    const data = await response.json();
+                    return data[0];
+                } catch (error) {
+                    console.error('Error inserting dislike:', error);
+                    throw error;
+                }
+            }
+
+            async incrementDislike(postUrn) {
+                try {
+                    const currentDislike = await this.getDislike(postUrn);
+                    if (!currentDislike) {
+                        return await this.insertDislike(postUrn);
+                    }
+
+                    const response = await fetch(`${this.supabaseUrl}/rest/v1/post_dislikes?post_urn=eq.${encodeURIComponent(postUrn)}`, {
+                        method: 'PATCH',
+                        headers: this.headers,
+                        body: JSON.stringify({
+                            dislike_count: currentDislike.dislike_count + 1,
+                            updated_at: new Date().toISOString()
+                        })
+                    });
+
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    }
+
+                    return await this.getDislike(postUrn);
+                } catch (error) {
+                    console.error('Error incrementing dislike:', error);
+                    throw error;
+                }
+            }
+
+            async decrementDislike(postUrn) {
+                try {
+                    const currentDislike = await this.getDislike(postUrn);
+                    if (!currentDislike || currentDislike.dislike_count <= 1) {
+                        return await this.removeDislike(postUrn);
+                    }
+
+                    const response = await fetch(`${this.supabaseUrl}/rest/v1/post_dislikes?post_urn=eq.${encodeURIComponent(postUrn)}`, {
+                        method: 'PATCH',
+                        headers: this.headers,
+                        body: JSON.stringify({
+                            dislike_count: Math.max(0, currentDislike.dislike_count - 1),
+                            updated_at: new Date().toISOString()
+                        })
+                    });
+
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    }
+
+                    return await this.getDislike(postUrn);
+                } catch (error) {
+                    console.error('Error decrementing dislike:', error);
+                    throw error;
+                }
+            }
+
+            async removeDislike(postUrn) {
+                try {
+                    const response = await fetch(`${this.supabaseUrl}/rest/v1/post_dislikes?post_urn=eq.${encodeURIComponent(postUrn)}`, {
+                        method: 'DELETE',
+                        headers: this.headers
+                    });
+
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    }
+
+                    return { dislike_count: 0 };
+                } catch (error) {
+                    console.error('Error removing dislike:', error);
+                    throw error;
+                }
+            }
+
+            async getDislike(postUrn) {
+                try {
+                    const response = await fetch(`${this.supabaseUrl}/rest/v1/post_dislikes?post_urn=eq.${encodeURIComponent(postUrn)}`, {
+                        method: 'GET',
+                        headers: this.headers
+                    });
+
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    }
+
+                    const data = await response.json();
+                    return data[0] || null;
+                } catch (error) {
+                    console.error('Error getting dislike:', error);
+                    throw error;
+                }
+            }
+
+            async getAllDislikes() {
+                try {
+                    const response = await fetch(`${this.supabaseUrl}/rest/v1/post_dislikes`, {
+                        method: 'GET',
+                        headers: this.headers
+                    });
+
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    }
+
+                    const data = await response.json();
+                    const dislikesMap = {};
+                    data.forEach(item => {
+                        dislikesMap[item.post_urn] = item.dislike_count;
+                    });
+                    return dislikesMap;
+                } catch (error) {
+                    console.error('Error getting all dislikes:', error);
+                    throw error;
+                }
+            }
+        }
+
+        let supabaseClient = null;
+
+        function setConfig() {
+            const url = document.getElementById('supabaseUrl').value;
+            const key = document.getElementById('supabaseKey').value;
+            
+            if (!url || !key) {
+                showResult('Please enter both URL and key', 'error');
+                return;
+            }
+            
+            supabaseClient = new SupabaseClient(url, key);
+            showResult('Configuration set successfully', 'success');
+        }
+
+        function getPostUrn() {
+            return document.getElementById('testPostUrn').value || 'urn:li:activity:test123';
+        }
+
+        async function testInsertDislike() {
+            if (!supabaseClient) {
+                showResult('Please set configuration first', 'error');
+                return;
+            }
+            
+            try {
+                const result = await supabaseClient.insertDislike(getPostUrn());
+                showResult(`Insert successful: ${JSON.stringify(result)}`, 'success');
+            } catch (error) {
+                showResult(`Insert failed: ${error.message}`, 'error');
+            }
+        }
+
+        async function testGetDislike() {
+            if (!supabaseClient) {
+                showResult('Please set configuration first', 'error');
+                return;
+            }
+            
+            try {
+                const result = await supabaseClient.getDislike(getPostUrn());
+                showResult(`Get result: ${JSON.stringify(result)}`, 'success');
+            } catch (error) {
+                showResult(`Get failed: ${error.message}`, 'error');
+            }
+        }
+
+        async function testIncrementDislike() {
+            if (!supabaseClient) {
+                showResult('Please set configuration first', 'error');
+                return;
+            }
+            
+            try {
+                const result = await supabaseClient.incrementDislike(getPostUrn());
+                showResult(`Increment successful: ${JSON.stringify(result)}`, 'success');
+            } catch (error) {
+                showResult(`Increment failed: ${error.message}`, 'error');
+            }
+        }
+
+        async function testDecrementDislike() {
+            if (!supabaseClient) {
+                showResult('Please set configuration first', 'error');
+                return;
+            }
+            
+            try {
+                const result = await supabaseClient.decrementDislike(getPostUrn());
+                showResult(`Decrement successful: ${JSON.stringify(result)}`, 'success');
+            } catch (error) {
+                showResult(`Decrement failed: ${error.message}`, 'error');
+            }
+        }
+
+        async function testRemoveDislike() {
+            if (!supabaseClient) {
+                showResult('Please set configuration first', 'error');
+                return;
+            }
+            
+            try {
+                const result = await supabaseClient.removeDislike(getPostUrn());
+                showResult(`Remove successful: ${JSON.stringify(result)}`, 'success');
+            } catch (error) {
+                showResult(`Remove failed: ${error.message}`, 'error');
+            }
+        }
+
+        async function testGetAllDislikes() {
+            if (!supabaseClient) {
+                showResult('Please set configuration first', 'error');
+                return;
+            }
+            
+            try {
+                const result = await supabaseClient.getAllDislikes();
+                showResult(`Get all successful: ${JSON.stringify(result)}`, 'success');
+            } catch (error) {
+                showResult(`Get all failed: ${error.message}`, 'error');
+            }
+        }
+
+        function showResult(message, type) {
+            const resultsDiv = document.getElementById('results');
+            const resultDiv = document.createElement('div');
+            resultDiv.className = `result ${type}`;
+            resultDiv.innerHTML = `<strong>${new Date().toLocaleTimeString()}:</strong> ${message}`;
+            resultsDiv.appendChild(resultDiv);
+            resultsDiv.scrollTop = resultsDiv.scrollHeight;
+        }
+    </script>
+</body>
+</html>

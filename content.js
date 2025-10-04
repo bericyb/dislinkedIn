@@ -1,0 +1,202 @@
+class DislinkedIn {
+  constructor() {
+    this.dislikes = new Map();
+    this.observer = null;
+    this.init();
+  }
+
+  init() {
+    this.loadDislikes();
+    this.startObserver();
+    this.injectDislikeButtons();
+  }
+
+  startObserver() {
+    this.observer = new MutationObserver((mutations) => {
+      mutations.forEach((mutation) => {
+        if (mutation.type === 'childList') {
+          mutation.addedNodes.forEach((node) => {
+            if (node.nodeType === Node.ELEMENT_NODE) {
+              this.injectDislikeButtons(node);
+            }
+          });
+        }
+      });
+    });
+
+    this.observer.observe(document.body, {
+      childList: true,
+      subtree: true
+    });
+  }
+
+  async loadDislikes() {
+    try {
+      const result = await chrome.storage.local.get(['dislikes']);
+      if (result.dislikes) {
+        this.dislikes = new Map(Object.entries(result.dislikes));
+      }
+    } catch (error) {
+      console.log('DislinkedIn: Error loading dislikes', error);
+    }
+  }
+
+  async saveDislikes() {
+    try {
+      const dislikesObj = Object.fromEntries(this.dislikes);
+      await chrome.storage.local.set({ dislikes: dislikesObj });
+    } catch (error) {
+      console.log('DislinkedIn: Error saving dislikes', error);
+    }
+  }
+
+  getPostId(element) {
+    const postContainer = element.closest('[data-urn]');
+    if (postContainer) {
+      return postContainer.getAttribute('data-urn');
+    }
+    return null;
+  }
+
+  createDislikeButton() {
+    const dislikeButton = document.createElement('span');
+    dislikeButton.className = 'dislinkedin-dislike-button feed-shared-social-action-bar__action-button feed-shared-social-action-bar--new-padding';
+
+    dislikeButton.innerHTML = `
+      <button 
+        aria-pressed="false" 
+        aria-label="React Dislike" 
+        class="artdeco-button artdeco-button--muted artdeco-button--3 artdeco-button--tertiary social-actions-button dislike-button__trigger" 
+        type="button"
+      >
+        <span class="artdeco-button__text">
+          <div class="flex-wrap justify-center artdeco-button__text align-items-center">
+            <svg role="none" aria-hidden="true" class="artdeco-button__icon" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-supported-dps="16x16">
+              <path d="M17 14V2"/>
+              <path d="M9 18.12 10 14H4.17a2 2 0 0 1-1.92-2.56l2.33-8A2 2 0 0 1 6.5 2H20a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2h-2.76a2 2 0 0 0-1.79 1.11L12 22a3.13 3.13 0 0 1-3-3.88Z"/>
+            </svg>
+            <span aria-hidden="true" class="artdeco-button__text dislike-button__text social-action-button__text">
+              Dislike
+            </span>
+          </div>
+        </span>
+      </button>
+    `;
+
+    return dislikeButton;
+  }
+
+  updateDislikeButton(button, postId, isDisliked) {
+    const buttonElement = button.querySelector('button');
+    const textElement = button.querySelector('.dislike-button__text');
+    const iconElement = button.querySelector('svg');
+
+    if (isDisliked) {
+      buttonElement.setAttribute('aria-pressed', 'true');
+      buttonElement.classList.add('dislinkedin-disliked');
+      textElement.textContent = 'Disliked';
+      iconElement.style.fill = '#e06847';
+    } else {
+      buttonElement.setAttribute('aria-pressed', 'false');
+      buttonElement.classList.remove('dislinkedin-disliked');
+      textElement.textContent = 'Dislike';
+      iconElement.style.fill = 'currentColor';
+    }
+
+    const count = this.dislikes.get(postId) || 0;
+    if (count > 0) {
+      let countElement = button.querySelector('.dislike-count');
+      if (!countElement) {
+        countElement = document.createElement('span');
+        countElement.className = 'dislike-count';
+        button.appendChild(countElement);
+      }
+      countElement.textContent = count;
+    } else {
+      const countElement = button.querySelector('.dislike-count');
+      if (countElement) {
+        countElement.remove();
+      }
+    }
+  }
+
+  async handleDislikeClick(button, postId) {
+    const currentCount = this.dislikes.get(postId) || 0;
+    const isCurrentlyDisliked = button.querySelector('button').getAttribute('aria-pressed') === 'true';
+
+    if (isCurrentlyDisliked) {
+      this.dislikes.set(postId, Math.max(0, currentCount - 1));
+      if (this.dislikes.get(postId) === 0) {
+        this.dislikes.delete(postId);
+      }
+    } else {
+      this.dislikes.set(postId, currentCount + 1);
+    }
+
+    await this.saveDislikes();
+    this.updateDislikeButton(button, postId, !isCurrentlyDisliked);
+
+    console.log(`DislinkedIn: Post ${postId} ${isCurrentlyDisliked ? 'un-disliked' : 'disliked'}`);
+  }
+
+  injectDislikeButtons(container = document) {
+    const actionBars = container.querySelectorAll('.feed-shared-social-action-bar:not(.dislinkedin-processed)');
+
+    actionBars.forEach((actionBar) => {
+      if (actionBar.querySelector('.dislinkedin-dislike-button')) {
+        return;
+      }
+
+      const postId = this.getPostId(actionBar);
+      if (!postId) {
+        return;
+      }
+
+      const likeButton = actionBar.querySelector('[aria-label*="Like"], .react-button__trigger')?.closest('.feed-shared-social-action-bar__action-button');
+      if (!likeButton) {
+        return;
+      }
+
+      const dislikeButton = this.createDislikeButton();
+      
+      dislikeButton.addEventListener('click', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        this.handleDislikeClick(dislikeButton, postId);
+      });
+
+      likeButton.insertAdjacentElement('afterend', dislikeButton);
+
+      const currentCount = this.dislikes.get(postId) || 0;
+      this.updateDislikeButton(dislikeButton, postId, false);
+
+      actionBar.classList.add('dislinkedin-processed');
+    });
+  }
+
+  destroy() {
+    if (this.observer) {
+      this.observer.disconnect();
+    }
+
+    document.querySelectorAll('.dislinkedin-dislike-button').forEach(button => {
+      button.remove();
+    });
+  }
+}
+
+let dislinkedIn;
+
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', () => {
+    dislinkedIn = new DislinkedIn();
+  });
+} else {
+  dislinkedIn = new DislinkedIn();
+}
+
+window.addEventListener('beforeunload', () => {
+  if (dislinkedIn) {
+    dislinkedIn.destroy();
+  }
+});

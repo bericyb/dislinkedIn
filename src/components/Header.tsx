@@ -19,7 +19,7 @@ export default function Header() {
 
           {/* Navigation Links */}
           <div className="hidden md:flex items-center gap-[40px]">
-            {isLandingPage && (
+            {isLandingPage && !user && (
               <>
                 <a href="#features" className="text-foreground/80 hover:text-foreground transition-colors">
                   Features
@@ -32,6 +32,9 @@ export default function Header() {
 
             {user ? (
               <>
+                <Link to="/feed" className="text-foreground/80 hover:text-foreground transition-colors">
+                  Feed
+                </Link>
                 <span className="text-sm text-foreground/60">{user.email}</span>
                 <button
                   onClick={() => signOut()}

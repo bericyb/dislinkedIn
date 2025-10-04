@@ -1,8 +1,11 @@
 import { motion } from 'motion/react';
 import { Link } from 'react-router-dom';
 import { Card } from '@/components/ui/card';
+import { useAuth } from '@/contexts/AuthContext';
 
 export default function Hero() {
+  const { user } = useAuth();
+
   return (
     <section className="relative min-h-screen flex items-center justify-center pt-[120px]">
       <div className="container mx-auto px-[40px]">
@@ -47,13 +50,13 @@ export default function Hero() {
               Download Extension
             </a>
             <Link
-              to="/signin"
+              to={user ? "/feed" : "/signin"}
               className="px-[40px] py-[20px] border-2 border-foreground/20 text-foreground hover:border-foreground/40 hover:bg-foreground/5 transition-all font-semibold text-lg flex items-center gap-[20px] card-corners relative"
             >
               <span className="corner-bottom-left">+</span>
               <span className="corner-bottom-right">+</span>
               <i className="hn hn-linkedin text-2xl"></i>
-              Sign in with LinkedIn
+              {user ? 'View Feed' : 'Sign in with LinkedIn'}
             </Link>
           </motion.div>
 

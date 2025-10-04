@@ -6,18 +6,23 @@ class DislinkedIn {
   }
 
   init() {
+    console.log('DislinkedIn: Initializing extension');
     this.loadDislikes();
     this.startObserver();
     this.injectDislikeButtons();
     this.setupMessageListener();
+    console.log('DislinkedIn: Initialization complete');
   }
 
   startObserver() {
+    console.log('DislinkedIn: Starting mutation observer');
     this.observer = new MutationObserver((mutations) => {
+      console.log(`DislinkedIn: Detected ${mutations.length} DOM mutations`);
       mutations.forEach((mutation) => {
         if (mutation.type === 'childList') {
           mutation.addedNodes.forEach((node) => {
             if (node.nodeType === Node.ELEMENT_NODE) {
+              console.log('DislinkedIn: Processing added node:', node);
               this.injectDislikeButtons(node);
             }
           });
@@ -29,6 +34,7 @@ class DislinkedIn {
       childList: true,
       subtree: true
     });
+    console.log('DislinkedIn: Mutation observer started');
   }
 
   async loadDislikes() {
@@ -71,10 +77,15 @@ class DislinkedIn {
   }
 
   getPostId(element) {
+    console.log('DislinkedIn: Getting postId for element:', element);
     const postContainer = element.closest('[data-urn]');
+    console.log('DislinkedIn: Found post container:', postContainer);
     if (postContainer) {
-      return postContainer.getAttribute('data-urn');
+      const urn = postContainer.getAttribute('data-urn');
+      console.log('DislinkedIn: Extracted URN:', urn);
+      return urn;
     }
+    console.log('DislinkedIn: No data-urn found in ancestors');
     return null;
   }
 
@@ -173,38 +184,54 @@ class DislinkedIn {
   }
 
   injectDislikeButtons(container = document) {
+    console.log('DislinkedIn: Starting injection, container:', container === document ? 'document' : container);
     const actionBars = container.querySelectorAll('.feed-shared-social-action-bar:not(.dislinkedin-processed)');
+    console.log(`DislinkedIn: Found ${actionBars.length} unprocessed action bars`);
 
-    actionBars.forEach((actionBar) => {
+    actionBars.forEach((actionBar, index) => {
+      console.log(`DislinkedIn: Processing action bar ${index + 1}/${actionBars.length}`);
+      
       if (actionBar.querySelector('.dislinkedin-dislike-button')) {
+        console.log(`DislinkedIn: Action bar ${index + 1} already has dislike button, skipping`);
         return;
       }
 
       const postId = this.getPostId(actionBar);
+      console.log(`DislinkedIn: Action bar ${index + 1} postId:`, postId);
       if (!postId) {
+        console.log(`DislinkedIn: Action bar ${index + 1} has no postId, skipping`);
         return;
       }
 
       const likeButton = actionBar.querySelector('[aria-label*="Like"], .react-button__trigger')?.closest('.feed-shared-social-action-bar__action-button');
+      console.log(`DislinkedIn: Action bar ${index + 1} like button found:`, !!likeButton);
       if (!likeButton) {
+        console.log(`DislinkedIn: Action bar ${index + 1} has no like button, checking available buttons:`, 
+          Array.from(actionBar.querySelectorAll('button')).map(b => b.getAttribute('aria-label')));
         return;
       }
 
+      console.log(`DislinkedIn: Creating dislike button for post ${postId}`);
       const dislikeButton = this.createDislikeButton();
       
       dislikeButton.addEventListener('click', (e) => {
         e.preventDefault();
         e.stopPropagation();
+        console.log(`DislinkedIn: Dislike button clicked for post ${postId}`);
         this.handleDislikeClick(dislikeButton, postId);
       });
 
       likeButton.insertAdjacentElement('afterend', dislikeButton);
+      console.log(`DislinkedIn: Dislike button inserted after like button for post ${postId}`);
 
       const currentCount = this.dislikes.get(postId) || 0;
       this.updateDislikeButton(dislikeButton, postId, false);
+      console.log(`DislinkedIn: Updated dislike button with count ${currentCount} for post ${postId}`);
 
       actionBar.classList.add('dislinkedin-processed');
     });
+    
+    console.log(`DislinkedIn: Injection complete. Processed ${actionBars.length} action bars`);
   }
 
   destroy() {

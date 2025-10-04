@@ -12,14 +12,7 @@ class SupabaseClient {
 
   async insertDislike(postUrn) {
     try {
-      // First try to get existing dislike
-      const existing = await this.getDislike(postUrn);
-      if (existing) {
-        // Post already has dislikes, increment it
-        return await this.incrementDislike(postUrn);
-      }
-
-      // Post doesn't exist, create new with count 1
+      // Try to insert new record first
       const response = await fetch(`${this.supabaseUrl}/rest/v1/post_dislikes`, {
         method: 'POST',
         headers: this.headers,
@@ -32,6 +25,12 @@ class SupabaseClient {
 
       if (!response.ok) {
         const errorText = await response.text();
+        
+        // Handle duplicate key constraint violation (HTTP 409 or PostgreSQL error 23505)
+        if (response.status === 409 || errorText.includes('"code":"23505"')) {
+          return await this.incrementDislike(postUrn);
+        }
+        
         console.error('Supabase error details:', errorText);
         throw new Error(`HTTP error! status: ${response.status} - ${errorText}`);
       }

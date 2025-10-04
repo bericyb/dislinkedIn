@@ -1,0 +1,152 @@
+@import url('https://fonts.googleapis.com/css2?family=Pixelify+Sans:wght@400..700&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 0 0% 3.9%;
+    --foreground: 0 0% 98%;
+    --card: 0 0% 3.9%;
+    --card-foreground: 0 0% 98%;
+    --popover: 0 0% 3.9%;
+    --popover-foreground: 0 0% 98%;
+    --primary: 210 100% 50%;
+    --primary-foreground: 0 0% 98%;
+    --secondary: 280 100% 50%;
+    --secondary-foreground: 0 0% 98%;
+    --muted: 0 0% 14.9%;
+    --muted-foreground: 0 0% 63.9%;
+    --accent: 0 0% 14.9%;
+    --accent-foreground: 0 0% 98%;
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 0 0% 14.9%;
+    --input: 0 0% 14.9%;
+    --ring: 0 0% 83.1%;
+    --radius: 0.5rem;
+  }
+}
+
+body {
+  margin: 0;
+  font-family: 'Pixelify Sans', monospace;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  color: hsl(var(--foreground));
+  background-color: hsl(var(--background));
+}
+
+* {
+  color: inherit;
+}
+
+/* Grid Pattern */
+.grid-pattern {
+  background-size: 40px 40px;
+  background-image:
+    linear-gradient(to right, rgba(255, 255, 255, 0.05) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(255, 255, 255, 0.05) 1px, transparent 1px);
+}
+
+/* Diagonal Dithering */
+.diagonal-dither {
+  background-image: repeating-linear-gradient(
+    45deg,
+    transparent,
+    transparent 2px,
+    rgba(255, 255, 255, 0.03) 2px,
+    rgba(255, 255, 255, 0.03) 4px
+  );
+}
+
+.diagonal-dither-reverse {
+  background-image: repeating-linear-gradient(
+    -45deg,
+    transparent,
+    transparent 2px,
+    rgba(255, 255, 255, 0.03) 2px,
+    rgba(255, 255, 255, 0.03) 4px
+  );
+}
+
+/* Gray Diagonal Dithering for Grid Blocks */
+.diagonal-gray-dither {
+  background-image: repeating-linear-gradient(
+    45deg,
+    transparent,
+    transparent 2px,
+    rgba(150, 150, 150, 0.15) 2px,
+    rgba(150, 150, 150, 0.15) 4px
+  );
+}
+
+.diagonal-gray-dither-reverse {
+  background-image: repeating-linear-gradient(
+    -45deg,
+    transparent,
+    transparent 2px,
+    rgba(150, 150, 150, 0.15) 2px,
+    rgba(150, 150, 150, 0.15) 4px
+  );
+}
+
+.bg-background {
+  background-color: hsl(var(--background));
+}
+
+.bg-primary {
+  background-color: hsl(var(--primary));
+}
+
+.bg-secondary {
+  background-color: hsl(var(--secondary));
+}
+
+/* Card Corner Plus Decorations */
+.card-corners {
+  position: relative;
+}
+
+.card-corners::before,
+.card-corners::after {
+  content: '+';
+  position: absolute;
+  color: rgba(150, 150, 150, 0.3);
+  font-size: 16px;
+  font-weight: 300;
+  line-height: 1;
+}
+
+/* Top-left corner */
+.card-corners::before {
+  top: -8px;
+  left: -6px;
+}
+
+/* Top-right corner */
+.card-corners::after {
+  top: -8px;
+  right: -6px;
+}
+
+/* Bottom corners using child elements */
+.card-corners .corner-bottom-left,
+.card-corners .corner-bottom-right {
+  position: absolute;
+  color: rgba(150, 150, 150, 0.3);
+  font-size: 16px;
+  font-weight: 300;
+  line-height: 1;
+}
+
+.card-corners .corner-bottom-left {
+  bottom: -8px;
+  left: -6px;
+}
+
+.card-corners .corner-bottom-right {
+  bottom: -8px;
+  right: -6px;
+}

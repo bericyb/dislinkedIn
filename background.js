@@ -5,26 +5,35 @@ class SupabaseClient {
     this.headers = {
       'Content-Type': 'application/json',
       'apikey': supabaseKey,
-      'Authorization': `Bearer ${supabaseKey}`
+      'Authorization': `Bearer ${supabaseKey}`,
+      'Prefer': 'return=representation'
     };
   }
 
   async insertDislike(postUrn) {
     try {
+      // First try to get existing dislike
+      const existing = await this.getDislike(postUrn);
+      if (existing) {
+        // Post already has dislikes, increment it
+        return await this.incrementDislike(postUrn);
+      }
+
+      // Post doesn't exist, create new with count 1
       const response = await fetch(`${this.supabaseUrl}/rest/v1/post_dislikes`, {
         method: 'POST',
         headers: this.headers,
         body: JSON.stringify({
+          id: Date.now() + Math.floor(Math.random() * 1000),
           post_urn: postUrn,
           dislike_count: 1
         })
       });
 
       if (!response.ok) {
-        if (response.status === 409) {
-          return await this.incrementDislike(postUrn);
-        }
-        throw new Error(`HTTP error! status: ${response.status}`);
+        const errorText = await response.text();
+        console.error('Supabase error details:', errorText);
+        throw new Error(`HTTP error! status: ${response.status} - ${errorText}`);
       }
 
       const data = await response.json();
@@ -165,14 +174,14 @@ class SupabaseBackend {
   async loadConfig() {
     try {
       const stored = await chrome.storage.local.get(['supabaseUrl', 'supabaseKey']);
-      
+
       if (stored.supabaseUrl && stored.supabaseKey) {
         this.supabaseClient = new SupabaseClient(stored.supabaseUrl, stored.supabaseKey);
         console.log('SupabaseBackend: Using stored Supabase configuration');
       } else {
-        const supabaseUrl = 'https://rnjfkywebysuruuruagse.supabase.co';
+        const supabaseUrl = 'https://rnjfkywebysuruuuagse.supabase.co';
         const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJuamZreXdlYnlzdXJ1dXVhZ3NlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTk1OTQyODMsImV4cCI6MjA3NTE3MDI4M30.Vu6X6rTWeWUfmGUwmU4IK2Elk_VhYIhan_lGxEJH6mw';
-        
+
         this.supabaseClient = new SupabaseClient(supabaseUrl, supabaseKey);
         console.log('SupabaseBackend: Using default Supabase configuration');
       }
@@ -218,17 +227,17 @@ class SupabaseBackend {
           const count = await this.getDislike(request.postId);
           sendResponse({ success: true, count });
           break;
-          
+
         case 'addDislike':
           const newCount = await this.addDislike(request.postId);
           sendResponse({ success: true, count: newCount });
           break;
-          
+
         case 'removeDislike':
           const updatedCount = await this.removeDislike(request.postId);
           sendResponse({ success: true, count: updatedCount });
           break;
-          
+
         case 'getAllDislikes':
           const allDislikes = await this.getAllDislikes();
           sendResponse({ success: true, dislikes: allDislikes });
@@ -238,7 +247,7 @@ class SupabaseBackend {
           await this.setSupabaseConfig(request.url, request.key);
           sendResponse({ success: true });
           break;
-          
+
         default:
           sendResponse({ success: false, error: 'Unknown action' });
       }
@@ -265,10 +274,11 @@ class SupabaseBackend {
         const result = await this.supabaseClient.getDislike(postId);
         return result ? result.dislike_count : 0;
       } catch (error) {
-        console.log('SupabaseBackend: Supabase error, falling back to local storage', error);
+        console.warn(`SupabaseBackend: Falling back to local storage for getDislike(${postId}). Supabase error:`, error.message);
         return this.dislikes?.get(postId) || 0;
       }
     } else {
+      console.info(`SupabaseBackend: Using local storage for getDislike(${postId}) - no Supabase client configured`);
       return this.dislikes?.get(postId) || 0;
     }
   }
@@ -280,10 +290,11 @@ class SupabaseBackend {
         console.log(`SupabaseBackend: Added dislike to ${postId}, total: ${result.dislike_count}`);
         return result.dislike_count;
       } catch (error) {
-        console.log('SupabaseBackend: Supabase error, falling back to local storage', error);
+        console.warn(`SupabaseBackend: Falling back to local storage for addDislike(${postId}). Supabase error:`, error.message);
         return await this.addDislikeLocal(postId);
       }
     } else {
+      console.info(`SupabaseBackend: Using local storage for addDislike(${postId}) - no Supabase client configured`);
       return await this.addDislikeLocal(postId);
     }
   }
@@ -294,7 +305,7 @@ class SupabaseBackend {
     if (!this.dislikes) this.dislikes = new Map();
     this.dislikes.set(postId, newCount);
     await this.saveToStorage();
-    
+
     console.log(`SupabaseBackend: Added dislike to ${postId} (local), total: ${newCount}`);
     return newCount;
   }
@@ -307,10 +318,11 @@ class SupabaseBackend {
         console.log(`SupabaseBackend: Removed dislike from ${postId}, total: ${count}`);
         return count;
       } catch (error) {
-        console.log('SupabaseBackend: Supabase error, falling back to local storage', error);
+        console.warn(`SupabaseBackend: Falling back to local storage for removeDislike(${postId}). Supabase error:`, error.message);
         return await this.removeDislikeLocal(postId);
       }
     } else {
+      console.info(`SupabaseBackend: Using local storage for removeDislike(${postId}) - no Supabase client configured`);
       return await this.removeDislikeLocal(postId);
     }
   }
@@ -318,15 +330,15 @@ class SupabaseBackend {
   async removeDislikeLocal(postId) {
     const currentCount = this.dislikes?.get(postId) || 0;
     const newCount = Math.max(0, currentCount - 1);
-    
+
     if (!this.dislikes) this.dislikes = new Map();
-    
+
     if (newCount === 0) {
       this.dislikes.delete(postId);
     } else {
       this.dislikes.set(postId, newCount);
     }
-    
+
     await this.saveToStorage();
     console.log(`SupabaseBackend: Removed dislike from ${postId} (local), total: ${newCount}`);
     return newCount;
@@ -337,10 +349,11 @@ class SupabaseBackend {
       try {
         return await this.supabaseClient.getAllDislikes();
       } catch (error) {
-        console.log('SupabaseBackend: Supabase error, falling back to local storage', error);
+        console.warn(`SupabaseBackend: Falling back to local storage for getAllDislikes(). Supabase error:`, error.message);
         return this.dislikes ? Object.fromEntries(this.dislikes) : {};
       }
     } else {
+      console.info(`SupabaseBackend: Using local storage for getAllDislikes() - no Supabase client configured`);
       return this.dislikes ? Object.fromEntries(this.dislikes) : {};
     }
   }
@@ -349,7 +362,7 @@ class SupabaseBackend {
     try {
       const tabs = await chrome.tabs.query({ url: '*://www.linkedin.com/*' });
       const allDislikes = await this.getAllDislikes();
-      
+
       for (const tab of tabs) {
         try {
           await chrome.tabs.sendMessage(tab.id, {

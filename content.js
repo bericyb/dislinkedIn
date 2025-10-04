@@ -9,6 +9,7 @@ class DislinkedIn {
     this.loadDislikes();
     this.startObserver();
     this.injectDislikeButtons();
+    this.setupMessageListener();
   }
 
   startObserver() {
@@ -32,22 +33,41 @@ class DislinkedIn {
 
   async loadDislikes() {
     try {
-      const result = await chrome.storage.local.get(['dislikes']);
-      if (result.dislikes) {
-        this.dislikes = new Map(Object.entries(result.dislikes));
+      const response = await chrome.runtime.sendMessage({ action: 'getAllDislikes' });
+      if (response.success) {
+        this.dislikes = new Map(Object.entries(response.dislikes));
       }
     } catch (error) {
-      console.log('DislinkedIn: Error loading dislikes', error);
+      console.log('DislinkedIn: Error loading dislikes from background', error);
     }
   }
 
-  async saveDislikes() {
-    try {
-      const dislikesObj = Object.fromEntries(this.dislikes);
-      await chrome.storage.local.set({ dislikes: dislikesObj });
-    } catch (error) {
-      console.log('DislinkedIn: Error saving dislikes', error);
-    }
+  setupMessageListener() {
+    chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+      if (message.action === 'syncDislikes') {
+        this.dislikes = new Map(Object.entries(message.dislikes));
+        this.updateAllDislikeButtons();
+        sendResponse({ success: true });
+      } else if (message.action === 'refreshDislikes') {
+        this.loadDislikes().then(() => {
+          this.updateAllDislikeButtons();
+          sendResponse({ success: true });
+        });
+        return true;
+      }
+    });
+  }
+
+  updateAllDislikeButtons() {
+    document.querySelectorAll('.dislinkedin-dislike-button').forEach(button => {
+      const actionBar = button.closest('.feed-shared-social-action-bar');
+      const postId = this.getPostId(actionBar);
+      if (postId) {
+        const count = this.dislikes.get(postId) || 0;
+        const isDisliked = count > 0;
+        this.updateDislikeButton(button, postId, isDisliked);
+      }
+    });
   }
 
   getPostId(element) {
@@ -124,19 +144,32 @@ class DislinkedIn {
     const currentCount = this.dislikes.get(postId) || 0;
     const isCurrentlyDisliked = button.querySelector('button').getAttribute('aria-pressed') === 'true';
 
-    if (isCurrentlyDisliked) {
-      this.dislikes.set(postId, Math.max(0, currentCount - 1));
-      if (this.dislikes.get(postId) === 0) {
-        this.dislikes.delete(postId);
+    try {
+      let response;
+      if (isCurrentlyDisliked) {
+        response = await chrome.runtime.sendMessage({ 
+          action: 'removeDislike', 
+          postId: postId 
+        });
+      } else {
+        response = await chrome.runtime.sendMessage({ 
+          action: 'addDislike', 
+          postId: postId 
+        });
       }
-    } else {
-      this.dislikes.set(postId, currentCount + 1);
+
+      if (response.success) {
+        if (response.count === 0) {
+          this.dislikes.delete(postId);
+        } else {
+          this.dislikes.set(postId, response.count);
+        }
+        this.updateDislikeButton(button, postId, !isCurrentlyDisliked);
+        console.log(`DislinkedIn: Post ${postId} ${isCurrentlyDisliked ? 'un-disliked' : 'disliked'}, count: ${response.count}`);
+      }
+    } catch (error) {
+      console.log('DislinkedIn: Error updating dislike', error);
     }
-
-    await this.saveDislikes();
-    this.updateDislikeButton(button, postId, !isCurrentlyDisliked);
-
-    console.log(`DislinkedIn: Post ${postId} ${isCurrentlyDisliked ? 'un-disliked' : 'disliked'}`);
   }
 
   injectDislikeButtons(container = document) {

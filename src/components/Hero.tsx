@@ -39,7 +39,7 @@ export default function Hero() {
           >
             <a
               href="#"
-              className="px-[40px] py-[20px] bg-primary text-primary-foreground hover:bg-primary/90 transition-all font-semibold text-lg shadow-lg shadow-primary/20 hover:shadow-xl hover:shadow-primary/30 flex items-center gap-[20px] card-corners relative"
+              className="px-[40px] py-[20px] bg-primary text-primary-foreground hover:bg-primary/90 transition-all font-semibold text-lg shadow-lg shadow-primary/20 flex items-center gap-[20px] card-corners relative"
             >
               <span className="corner-bottom-left">+</span>
               <span className="corner-bottom-right">+</span>

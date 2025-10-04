@@ -153,6 +153,7 @@ class SupabaseClient {
 class SupabaseBackend {
   constructor() {
     this.supabaseClient = null;
+    this.dislikes = new Map();
     this.init();
   }
 
@@ -163,14 +164,20 @@ class SupabaseBackend {
 
   async loadConfig() {
     try {
-      const supabaseUrl = 'https://rnjfkywebysuruuruagse.supabase.co';
-      const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJuamZreXdlYnlzdXJ1dXVhZ3NlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTk1OTQyODMsImV4cCI6MjA3NTE3MDI4M30.Vu6X6rTWeWUfmGUwmU4IK2Elk_VhYIhan_lGxEJH6mw';
+      const stored = await chrome.storage.local.get(['supabaseUrl', 'supabaseKey']);
       
-      this.supabaseClient = new SupabaseClient(supabaseUrl, supabaseKey);
-      console.log('SupabaseBackend: Using hardcoded Supabase configuration');
+      if (stored.supabaseUrl && stored.supabaseKey) {
+        this.supabaseClient = new SupabaseClient(stored.supabaseUrl, stored.supabaseKey);
+        console.log('SupabaseBackend: Using stored Supabase configuration');
+      } else {
+        const supabaseUrl = 'https://rnjfkywebysuruuruagse.supabase.co';
+        const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJuamZreXdlYnlzdXJ1dXVhZ3NlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTk1OTQyODMsImV4cCI6MjA3NTE3MDI4M30.Vu6X6rTWeWUfmGUwmU4IK2Elk_VhYIhan_lGxEJH6mw';
+        
+        this.supabaseClient = new SupabaseClient(supabaseUrl, supabaseKey);
+        console.log('SupabaseBackend: Using default Supabase configuration');
+      }
     } catch (error) {
       console.log('SupabaseBackend: Error initializing Supabase client', error);
-      this.dislikes = new Map();
       await this.loadFromStorage();
     }
   }
@@ -354,53 +361,6 @@ class SupabaseBackend {
       }
     } catch (error) {
       console.log('SupabaseBackend: Error syncing with content script', error);
-    }
-  }
-}
-
-let supabaseBackend;
-
-chrome.runtime.onInstalled.addListener(() => {
-  console.log('DislinkedIn extension installed');
-  supabaseBackend = new SupabaseBackend();
-});
-
-chrome.runtime.onStartup.addListener(() => {
-  console.log('DislinkedIn extension started');
-  supabaseBackend = new SupabaseBackend();
-});
-
-if (!supabaseBackend) {
-  supabaseBackend = new SupabaseBackend();
-}
-
-chrome.action.onClicked.addListener(async (tab) => {
-  if (tab.url.includes('linkedin.com')) {
-    try {
-      await chrome.tabs.sendMessage(tab.id, { action: 'refreshDislikes' });
-    } catch (error) {
-      console.log('Could not send message to tab', error);
-    }
-  }
-});
-  }
-
-  async syncWithContentScript() {
-    try {
-      const tabs = await chrome.tabs.query({ url: '*://www.linkedin.com/*' });
-      const allDislikes = await this.getAllDislikes();
-      
-      for (const tab of tabs) {
-        try {
-          await chrome.tabs.sendMessage(tab.id, {
-            action: 'syncDislikes',
-            dislikes: allDislikes
-          });
-        } catch (error) {
-        }
-      }
-    } catch (error) {
-      console.log('MockBackend: Error syncing with content script', error);
     }
   }
 }

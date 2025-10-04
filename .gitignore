@@ -46,3 +46,5 @@ web-ext-artifacts/
 # Temporary files
 *.tmp
 *.temp
+.vercel
+.claude/settings.local.json

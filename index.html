@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DislinkedIn - LinkedIn Dislike Tracker</title>
+    <link rel="stylesheet" href="app.css">
+</head>
+<body>
+    <!-- Auth Container (Login/Signup) -->
+    <div id="authContainer" class="auth-container">
+        <div class="auth-card">
+            <h1>DislinkedIn</h1>
+            <p class="subtitle">Track LinkedIn post dislikes</p>
+
+            <div id="authTabs" class="auth-tabs">
+                <button class="auth-tab active" data-tab="login">Login</button>
+                <button class="auth-tab" data-tab="signup">Sign Up</button>
+            </div>
+
+            <!-- Login Form -->
+            <form id="loginForm" class="auth-form">
+                <div class="form-group">
+                    <label for="loginEmail">Email</label>
+                    <input type="email" id="loginEmail" required>
+                </div>
+                <div class="form-group">
+                    <label for="loginPassword">Password</label>
+                    <input type="password" id="loginPassword" required>
+                </div>
+                <button type="submit" class="btn btn-primary">Login</button>
+                <div id="loginError" class="error-message"></div>
+            </form>
+
+            <!-- Signup Form -->
+            <form id="signupForm" class="auth-form" style="display: none;">
+                <div class="form-group">
+                    <label for="signupEmail">Email</label>
+                    <input type="email" id="signupEmail" required>
+                </div>
+                <div class="form-group">
+                    <label for="signupPassword">Password</label>
+                    <input type="password" id="signupPassword" required minlength="6">
+                </div>
+                <div class="form-group">
+                    <label for="signupPasswordConfirm">Confirm Password</label>
+                    <input type="password" id="signupPasswordConfirm" required minlength="6">
+                </div>
+                <button type="submit" class="btn btn-primary">Sign Up</button>
+                <div id="signupError" class="error-message"></div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Main App Container (Dashboard) -->
+    <div id="appContainer" class="app-container" style="display: none;">
+        <nav class="navbar">
+            <div class="nav-content">
+                <h1>DislinkedIn</h1>
+                <div class="nav-actions">
+                    <span id="userEmail" class="user-email"></span>
+                    <button id="logoutBtn" class="btn btn-secondary">Logout</button>
+                </div>
+            </div>
+        </nav>
+
+        <main class="main-content">
+            <div class="stats-section">
+                <h2>Statistics</h2>
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-value" id="totalDislikes">0</div>
+                        <div class="stat-label">Total Dislikes</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value" id="postsDisliked">0</div>
+                        <div class="stat-label">Posts Disliked</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="dislikes-section">
+                <div class="section-header">
+                    <h2>Disliked Posts</h2>
+                    <button id="refreshBtn" class="btn btn-primary">Refresh</button>
+                </div>
+                <div id="dislikesList" class="dislikes-list">
+                    <!-- Disliked posts will be displayed here -->
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <div id="toast" class="toast"></div>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="app.js"></script>
+</body>
+</html>

@@ -135,7 +135,7 @@ body {
 .card-corners .corner-bottom-left,
 .card-corners .corner-bottom-right {
   position: absolute;
-  color: rgba(150, 150, 150, 0.3);
+  color: rgba(200, 200, 150, 0.3);
   font-size: 16px;
   font-weight: 300;
   line-height: 1;

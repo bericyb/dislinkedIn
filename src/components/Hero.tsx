@@ -1,4 +1,5 @@
 import { motion } from 'motion/react';
+import { Link } from 'react-router-dom';
 import { Card } from '@/components/ui/card';
 
 export default function Hero() {
@@ -45,15 +46,15 @@ export default function Hero() {
               <i className="hn hn-download text-2xl"></i>
               Download Extension
             </a>
-            <a
-              href="#"
+            <Link
+              to="/signin"
               className="px-[40px] py-[20px] border-2 border-foreground/20 text-foreground hover:border-foreground/40 hover:bg-foreground/5 transition-all font-semibold text-lg flex items-center gap-[20px] card-corners relative"
             >
               <span className="corner-bottom-left">+</span>
               <span className="corner-bottom-right">+</span>
               <i className="hn hn-linkedin text-2xl"></i>
               Sign in with LinkedIn
-            </a>
+            </Link>
           </motion.div>
 
           {/* Stats - Grid-aligned: 80px top margin (2 grid cells), 40px gap */}

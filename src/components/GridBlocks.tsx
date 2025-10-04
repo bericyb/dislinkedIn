@@ -19,7 +19,7 @@ export default function GridBlocks() {
       const newBlocks: GridBlock[] = [];
       const blockCount = Math.floor(Math.random() * 5) + 4; // 4-8 blocks
 
-      // Calculate available grid cells
+      // Calculate available grid cells - use viewport dimensions since blocks are fixed
       const maxGridX = Math.floor(window.innerWidth / GRID_SIZE);
       const maxGridY = Math.floor(window.innerHeight / GRID_SIZE);
 
@@ -66,7 +66,7 @@ export default function GridBlocks() {
         return (
           <div
             key={block.id}
-            className={`absolute ${
+            className={`fixed ${
               block.patternDirection === 'forward'
                 ? 'diagonal-gray-dither'
                 : 'diagonal-gray-dither-reverse'

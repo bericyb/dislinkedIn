@@ -1,6 +1,8 @@
 class PopupManager {
   constructor() {
     this.init();
+    this.supabaseUrl = 'https://rnjfkywebysuruuuagse.supabase.co'
+    this.supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJuamZreXdlYnlzdXJ1dXVhZ3NlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTk1OTQyODMsImV4cCI6MjA3NTE3MDI4M30.Vu6X6rTWeWUfmGUwmU4IK2Elk_VhYIhan_lGxEJH6mw'
   }
 
   async init() {
@@ -43,51 +45,6 @@ class PopupManager {
 
     document.querySelector(`[data-tab="${tabName}"]`).classList.add('active');
     document.getElementById(`${tabName}-tab`).classList.add('active');
-  }
-
-  async loadConfig() {
-    try {
-      const result = await chrome.storage.local.get(['supabaseUrl', 'supabaseKey']);
-      
-      if (result.supabaseUrl) {
-        document.getElementById('supabaseUrl').value = result.supabaseUrl;
-      }
-      if (result.supabaseKey) {
-        document.getElementById('supabaseKey').value = result.supabaseKey;
-      }
-
-      this.updateBackendStatus(result.supabaseUrl && result.supabaseKey);
-    } catch (error) {
-      console.log('Error loading config:', error);
-    }
-  }
-
-  async saveConfig() {
-    const url = document.getElementById('supabaseUrl').value.trim();
-    const key = document.getElementById('supabaseKey').value.trim();
-
-    if (!url || !key) {
-      this.showStatus('Please enter both URL and key', 'error');
-      return;
-    }
-
-    try {
-      const response = await chrome.runtime.sendMessage({
-        action: 'setSupabaseConfig',
-        url: url,
-        key: key
-      });
-
-      if (response.success) {
-        this.showStatus('Configuration saved!', 'success');
-        this.updateBackendStatus(true);
-      } else {
-        this.showStatus('Error saving configuration', 'error');
-      }
-    } catch (error) {
-      console.log('Error saving config:', error);
-      this.showStatus('Error saving configuration', 'error');
-    }
   }
 
   async testConnection() {

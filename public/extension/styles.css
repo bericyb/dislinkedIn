@@ -1,0 +1,74 @@
+.dislinkedin-dislike-button {
+  display: flex !important;
+  align-items: center !important;
+  margin: 0 !important;
+}
+
+.dislinkedin-dislike-button button {
+  color: rgba(0, 0, 0, 0.6) !important;
+  transition: color 0.15s ease-in-out !important;
+  border: none !important;
+  background: transparent !important;
+  cursor: pointer !important;
+}
+
+.dislinkedin-dislike-button button:hover {
+  color: rgba(0, 0, 0, 0.9) !important;
+  background-color: rgba(0, 0, 0, 0.08) !important;
+}
+
+.dislinkedin-dislike-button button.dislinkedin-disliked {
+  color: #e06847 !important;
+}
+
+.dislinkedin-dislike-button button.dislinkedin-disliked:hover {
+  color: #d45528 !important;
+  background-color: rgba(224, 104, 71, 0.1) !important;
+}
+
+.dislinkedin-dislike-button .artdeco-button__icon {
+  width: 16px !important;
+  height: 16px !important;
+  margin-right: 4px !important;
+}
+
+.dislinkedin-dislike-button .dislike-button__text {
+  font-size: 14px !important;
+  font-weight: 600 !important;
+  line-height: 1.25 !important;
+}
+
+.dislike-count {
+  margin-left: 8px !important;
+  padding: 2px 6px !important;
+  background-color: rgba(0, 0, 0, 0.08) !important;
+  border-radius: 12px !important;
+  font-size: 12px !important;
+  font-weight: 600 !important;
+  color: rgba(0, 0, 0, 0.9) !important;
+  min-width: 20px !important;
+  text-align: center !important;
+}
+
+.dislinkedin-dislike-button:hover .dislike-count {
+  background-color: rgba(0, 0, 0, 0.12) !important;
+}
+
+.dislinkedin-dislike-button button.dislinkedin-disliked ~ .dislike-count {
+  background-color: rgba(224, 104, 71, 0.1) !important;
+  color: #e06847 !important;
+}
+
+@media (max-width: 768px) {
+  .dislinkedin-dislike-button .dislike-button__text {
+    display: none !important;
+  }
+  
+  .dislinkedin-dislike-button .artdeco-button__icon {
+    margin-right: 0 !important;
+  }
+}
+
+.feed-shared-social-action-bar.dislinkedin-processed {
+  gap: 8px !important;
+}

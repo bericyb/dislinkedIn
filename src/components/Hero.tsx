@@ -40,15 +40,15 @@ export default function Hero() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.4 }}
           >
-            <a
-              href="#"
+            <Link
+              to="/install"
               className="px-[40px] py-[20px] bg-primary text-primary-foreground hover:bg-primary/90 transition-all font-semibold text-lg shadow-lg shadow-primary/20 flex items-center gap-[20px] card-corners relative"
             >
               <span className="corner-bottom-left">+</span>
               <span className="corner-bottom-right">+</span>
               <i className="hn hn-download text-2xl"></i>
               Download Extension
-            </a>
+            </Link>
             <Link
               to={user ? "/feed" : "/signin"}
               className="px-[40px] py-[20px] border-2 border-foreground/20 text-foreground hover:border-foreground/40 hover:bg-foreground/5 transition-all font-semibold text-lg flex items-center gap-[20px] card-corners relative"
